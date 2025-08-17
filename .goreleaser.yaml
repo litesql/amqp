@@ -1,0 +1,82 @@
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: amqp
+    binary: amqp
+    buildmode: "c-shared"
+    flags:
+      - -tags=zig
+    ldflags:
+    - -s -w -X github.com/litesql/amqp/extension.version={{.Version}} -X github.com/litesql/amqp/extension.commit={{.Commit}} -X github.com/litesql/amqp/extension.date={{.Date}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+      - CC=zig cc -target x86_64-linux-gnu
+
+  - id: amqp_windows
+    binary: amqp
+    buildmode: "c-shared"
+    flags:
+      - -tags=zig
+    ldflags:
+    - -s -w -X github.com/litesql/amqp/extension.version={{.Version}} -X github.com/litesql/amqp/extension.commit={{.Commit}} -X github.com/litesql/amqp/extension.date={{.Date}}
+    goos:
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+      - CC=zig cc -target x86_64-windows
+
+  - id: amqp_darwin
+    binary: amqp
+    buildmode: "c-shared"
+    ldflags:
+    - -s -w -X github.com/litesql/amqp/extension.version={{.Version}} -X github.com/litesql/amqp/extension.commit={{.Commit}} -X github.com/litesql/amqp/extension.date={{.Date}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=1
+      - CC=o64-clang
+
+archives:
+  - id: amqp
+    formats: [tar.gz]
+    ids: [amqp, amqp_windows, amqp_darwin]
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      amqp_v
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - none*
+
+changelog:
+  disable: true
+
+release:  
+  github:
+    owner: litesql
+    name: amqp
+
+  draft: false

@@ -1,0 +1,5 @@
+*.so
+amqp.h
+
+# Added by goreleaser init:
+dist/
